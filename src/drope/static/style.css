@@ -1,0 +1,55 @@
+* {
+    box-sizing: border-box;
+}
+
+.nodisplay {
+    display: none !important;
+}
+
+html, body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    --main-color: rgb(100, 100, 100);
+    color: var(--main-color);
+    font-size: 2rem;
+}
+
+.main-area {
+    flex: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#drop-area {
+    flex: auto;
+    margin: 2rem;
+    padding: 2rem;
+    border: 4px dashed var(--main-color);
+    user-select: none;
+}
+
+#drop-area.drag-active {
+    --main-color: rgb(0, 130, 0);
+    border: 4px solid var(--main-color);
+    color: var(--main-color)
+}
+
+#drop-area.drag-active * {
+    pointer-events: none;
+}
+
+#message-button-container {
+    text-align: center;
+}
+
+.clickable-text {
+    border-bottom: 2px dashed var(--main-color);
+    cursor: pointer;
+}

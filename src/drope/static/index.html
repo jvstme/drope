@@ -5,13 +5,35 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Drope</title>
+	<link href="style.css" rel="stylesheet">
+	<script src="script.js" defer></script>
 </head>
 
 <body>
-	<form method="post" enctype="multipart/form-data">
-		<input type="file" name="file">
-		<input type="submit" value="Upload">
-	</form>
+	<div id="drop-area" class="main-area">
+		<form method="post" enctype="multipart/form-data" id="upload-form">
+			<p>
+				Drop a file here or
+				<label for="file-input-field" class="clickable-text">
+					choose from file system
+				</label>
+			</p>
+			<div class="nodisplay">
+				<input type="file" name="file" id="file-input-field">
+			</div>
+		</form>
+	</div>
+	<div id="loading-area" class="main-area nodisplay">
+		Uploading... (<span id="upload-progress-indicator">0.0</span>%)
+	</div>
+	<div id="message-area" class="main-area nodisplay">
+		<div>
+			<p id="message-text"></p>
+			<p id="message-button-container">
+				<span id="message-close-button" class="clickable-text">Ok</span>
+			</p>
+		</div>
+	</div>
 </body>
 
 </html>
