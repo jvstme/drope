@@ -25,6 +25,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    text-align: center;
+    padding: 1rem;
 }
 
 #drop-area {
@@ -43,10 +45,6 @@ body {
 
 #drop-area.drag-active * {
     pointer-events: none;
-}
-
-#message-button-container {
-    text-align: center;
 }
 
 .clickable-text {

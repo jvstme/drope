@@ -31,12 +31,17 @@ function displayMessage(text) {
     activateArea(messageArea);
 }
 
+function setUploadProgress(value) {
+    uploadProgressIndicator.textContent = Number(value).toFixed(1);
+}
+
 function messageCloseButtonClicked() {
     activateArea(dropArea);
 }
 
 
 function fileChosen() {
+    setUploadProgress(0);
     activateArea(loadingArea);
     submitForm();
 }
@@ -63,7 +68,7 @@ function uploadFailed() {
 
 function uploadProgressed(e) {
     const progress = e.loaded / e.total * 100;
-    uploadProgressIndicator.textContent = progress.toFixed(1);
+    setUploadProgress(progress);
 }
 
 function updateDropAreaStatus() {
