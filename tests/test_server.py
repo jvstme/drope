@@ -3,27 +3,76 @@ from io import BytesIO
 
 import aiohttp
 import pytest
-from drope.server import make_app
+from drope import server
 
 
 @pytest.fixture
 async def client(aiohttp_client):
-    app = make_app()
+    app = server.make_app()
     client = await aiohttp_client(app)
     return client
 
 
-async def test_upload(client, tmpdir):
+async def test_unique_filename(tmpdir):
     os.chdir(tmpdir)
 
-    form = aiohttp.FormData()
-    form.add_field("file", BytesIO(b"12345"), filename="12345.txt")
-    resp = await client.post("/", data=form)
+    assert await server.unique_filename("nonduplicate") == "nonduplicate"
 
-    assert resp.status == 200
+    with open("duplicate", "w"):
+        pass
+    assert await server.unique_filename("duplicate") == "duplicate(1)"
+
+    with open("duplicate(1)", "w"):
+        pass
+    assert await server.unique_filename("duplicate") == "duplicate(2)"
+    assert await server.unique_filename("duplicate(1)") == "duplicate(1)(1)"
+
+
+async def test_upload_with_duplicates(client, tmpdir):
+    os.chdir(tmpdir)
+
+    form1 = aiohttp.FormData()
+    form1.add_field("file", BytesIO(b"12345"), filename="12345.txt")
+    
+    resp1 = await client.post("/", data=form1)
+    assert resp1.status == 200
+
+    form2 = aiohttp.FormData()
+    form2.add_field("file", BytesIO(b"12345"), filename="12345.txt")
+
+    resp2 = await client.post("/", data=form2)
+    assert resp2.status == 200
 
     with open("12345.txt", "rb") as uploaded_file:
         assert uploaded_file.read() == b"12345"
+
+    with open("12345(1).txt", "rb") as uploaded_file:
+        assert uploaded_file.read() == b"12345"
+
+
+async def test_upload_overwrite_duplicates(aiohttp_client, tmpdir):
+    app = server.make_app(overwrite_duplicates=True)
+    client = await aiohttp_client(app)
+
+    os.chdir(tmpdir)
+
+    form1 = aiohttp.FormData()
+    form1.add_field("file", BytesIO(b"123"), filename="123.txt")
+    
+    resp1 = await client.post("/", data=form1)
+    assert resp1.status == 200
+
+    with open("123.txt", "rb") as uploaded_file:
+        assert uploaded_file.read() == b"123"
+
+    form2 = aiohttp.FormData()
+    form2.add_field("file", BytesIO(b"other content"), filename="123.txt")
+
+    resp2 = await client.post("/", data=form2)
+    assert resp2.status == 200
+
+    with open("123.txt", "rb") as uploaded_file:
+        assert uploaded_file.read() == b"other content"
 
 
 async def test_index(client):
