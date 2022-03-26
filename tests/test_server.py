@@ -1,30 +1,36 @@
 import os
-from pathlib import Path
-from tempfile import NamedTemporaryFile
+from io import BytesIO
 
-from drope.server import app
-from fastapi.testclient import TestClient
-
-client = TestClient(app)
+import aiohttp
+import pytest
+from drope.server import make_app
 
 
-def test_upload(tmpdir):
+@pytest.fixture
+async def client(aiohttp_client):
+    app = make_app()
+    client = await aiohttp_client(app)
+    return client
+
+
+async def test_upload(client, tmpdir):
     os.chdir(tmpdir)
-    original_file = NamedTemporaryFile()
-    original_file.write(b"12345")
-    original_file.seek(0)
-    resp = client.post(
-        "/",
-        files=dict(file=original_file),
-    )
-    assert resp.status_code == 303
-    with open(Path(original_file.name).name, "rb") as uploaded_file:
+
+    form = aiohttp.FormData()
+    form.add_field("file", BytesIO(b"12345"), filename="12345.txt")
+    resp = await client.post("/", data=form)
+
+    assert resp.status == 200
+
+    with open("12345.txt", "rb") as uploaded_file:
         assert uploaded_file.read() == b"12345"
 
 
-def test_index():
-    assert client.get("/").status_code == 200
+async def test_index(client):
+    resp = await client.get("/")
+    assert resp.status == 200
 
 
-def test_not_found():
-    assert client.get("/nonexistent").status_code == 404
+async def test_not_found(client):
+    resp = await client.get("/nonexistent")
+    assert resp.status == 404

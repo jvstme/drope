@@ -22,6 +22,8 @@ def main():
     import os
     os.chdir(args.dir)
 
-    import uvicorn
-    from .server import app
-    uvicorn.run(app, host=args.host, port=args.port)
+    from .server import make_app
+    app = make_app()
+
+    from aiohttp.web import run_app
+    run_app(app, host=args.host, port=args.port)

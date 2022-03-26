@@ -16,15 +16,14 @@ setuptools.setup(
 
     install_requires=[
         "aiofiles",
-        "fastapi",
-        "python-multipart",
+        "aiohttp",
         "uvicorn",
     ],
 
     extras_require={
         "dev": [
             "pytest",
-            "requests",
+            "pytest-aiohttp",
         ]
     }
 )
