@@ -75,6 +75,27 @@ async def test_upload_overwrite_duplicates(aiohttp_client, tmpdir):
         assert uploaded_file.read() == b"other content"
 
 
+async def test_upload_multiple_files(client, tmpdir):
+    os.chdir(tmpdir)
+
+    with open("first", "w") as f:
+        f.write("first")
+
+    form = aiohttp.FormData()
+    form.add_field("file", BytesIO(b"new_first"), filename="first")
+    form.add_field("file", BytesIO(b"second"), filename="second")
+
+    resp = await client.post("/", data=form)
+    assert resp.status == 200
+
+    with open("first") as first:
+        assert first.read() == "first"
+    with open("first(1)") as new_first:
+        assert new_first.read() == "new_first"
+    with open("second") as second:
+        assert second.read() == "second"
+
+
 async def test_index(client):
     resp = await client.get("/")
     assert resp.status == 200

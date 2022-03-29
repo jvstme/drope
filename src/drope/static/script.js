@@ -58,8 +58,14 @@ function submitForm() {
     xhr.send(data);
 }
 
+function filesNumberDescription() {
+    const n = fileInputField.files.length;
+    const noun = n === 1 ? "file" : "files";
+    return n + " " + noun;
+}
+
 function uploadSuccessful() {
-    displayMessage("File uploaded :)");
+    displayMessage("Uploaded " + filesNumberDescription() + " :)");
 }
 
 function uploadFailed() {
@@ -134,15 +140,7 @@ function itemDropped(e) {
         dragCounter = 0;
         updateDropAreaStatus();
 
-        const files = getFiles(e.dataTransfer);
-
-        if (files.length > 1) {
-            displayMessage(
-                "Can only upload one file at a time. Please, try again",
-            );
-        } else {
-            fileInputField.files = getFiles(e.dataTransfer);
-            fileChosen();
-        }
+        fileInputField.files = getFiles(e.dataTransfer);
+        fileChosen();
     }
 }

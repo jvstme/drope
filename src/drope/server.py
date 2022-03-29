@@ -31,6 +31,8 @@ async def unique_filename(original_path: str):
 async def post_index(request: web.Request):
     fields = await request.multipart()
 
+    files_received = 0
+
     async for field in fields:
         if field.name != "file":
             continue
@@ -49,10 +51,13 @@ async def post_index(request: web.Request):
             while chunk:
                 await f.write(chunk)
                 chunk = await field.read_chunk(size=CHUNK_SIZE)
+            
+        files_received += 1
     
+    if files_received:
         raise web.HTTPSeeOther(".")
-    
-    raise web.HTTPBadRequest(text="file field is required")
+    else:
+        raise web.HTTPBadRequest(text="file field is required")
 
 
 @routes.get("/")
