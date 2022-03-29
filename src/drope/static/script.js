@@ -51,11 +51,22 @@ function submitForm() {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", ".");
 
-    xhr.addEventListener("load", uploadSuccessful);
-    xhr.addEventListener("error", uploadFailed);
     xhr.upload.addEventListener("progress", uploadProgressed);
+    xhr.addEventListener("readystatechange", uploadReadyStateChanged);
 
     xhr.send(data);
+}
+
+function uploadReadyStateChanged(e) {
+    const xhr = e.target;
+
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+            uploadSuccessful();
+        } else {
+            uploadFailed();
+        }
+    }
 }
 
 function filesNumberDescription() {
