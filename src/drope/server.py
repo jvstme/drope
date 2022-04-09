@@ -4,6 +4,7 @@ from pathlib import Path
 import aiofiles
 import aiofiles.os
 from aiohttp import web
+from aiohttp.multipart import BodyPartReader
 
 
 CHUNK_SIZE = 2 ** 16
@@ -27,6 +28,15 @@ async def unique_filename(original_path: str):
             return path
 
 
+async def write_file(field: BodyPartReader, filename: str):
+    async with aiofiles.open(filename, "wb") as f:
+        chunk = await field.read_chunk(size=CHUNK_SIZE)
+
+        while chunk:
+            await f.write(chunk)
+            chunk = await field.read_chunk(size=CHUNK_SIZE)
+
+
 @routes.post("/")
 async def post_index(request: web.Request):
     try:
@@ -47,15 +57,17 @@ async def post_index(request: web.Request):
         if not filename:
             continue
 
+        part_filename = filename + ".part"
+
+        if not request.app["overwrite_duplicates"]:
+            part_filename = await unique_filename(part_filename)
+        
+        await write_file(field, part_filename)
+
         if not request.app["overwrite_duplicates"]:
             filename = await unique_filename(filename)
-
-        async with aiofiles.open(filename, "wb") as f:
-            chunk = await field.read_chunk(size=CHUNK_SIZE)
-
-            while chunk:
-                await f.write(chunk)
-                chunk = await field.read_chunk(size=CHUNK_SIZE)
+        
+        await aiofiles.os.rename(part_filename, filename)
             
         files_received += 1
     
