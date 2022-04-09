@@ -29,7 +29,12 @@ async def unique_filename(original_path: str):
 
 @routes.post("/")
 async def post_index(request: web.Request):
-    fields = await request.multipart()
+    try:
+        fields = await request.multipart()
+    except (ValueError, AssertionError):
+        raise web.HTTPBadRequest(
+            text="multipart/form-data expected in request body",
+        )
 
     files_received = 0
 
