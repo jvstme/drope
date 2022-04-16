@@ -1,3 +1,4 @@
+import logging
 from itertools import count
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from aiohttp.multipart import BodyPartReader
 CHUNK_SIZE = 2 ** 16
 static_path = Path(__file__).parent.joinpath("static").absolute()
 
+logger = logging.getLogger(__name__)
 routes = web.RouteTableDef()
 
 
@@ -57,6 +59,8 @@ async def post_index(request: web.Request):
         if not filename:
             continue
 
+        logger.info("Receiving %s", filename)
+
         part_filename = filename + ".part"
 
         if not request.app["overwrite_duplicates"]:
@@ -70,6 +74,8 @@ async def post_index(request: web.Request):
             await aiofiles.os.remove(filename)
         
         await aiofiles.os.rename(part_filename, filename)
+
+        logger.info("Completed %s", filename)
             
         files_received += 1
     

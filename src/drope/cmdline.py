@@ -1,5 +1,10 @@
+import logging
+import sys
 from argparse import ArgumentParser
 from pathlib import Path
+
+from . import server
+
 
 parser = ArgumentParser(
     description="Run a service to receive file uploads",
@@ -31,14 +36,23 @@ parser.add_argument(
 )
 
 
+def setup_logging():
+    formatter = logging.Formatter('%(asctime)s %(message)s', '%H:%M:%S')
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(formatter)
+    server.logger.setLevel(logging.INFO)
+    server.logger.addHandler(handler)
+
+
 def main():
-    args = parser.parse_args()
-
     import os
-    os.chdir(args.dir)
-
-    from .server import make_app
-    app = make_app(overwrite_duplicates=args.overwrite_duplicates)
-
     from aiohttp.web import run_app
+
+    setup_logging()
+
+    args = parser.parse_args()
+    os.chdir(args.dir)
+    app = server.make_app(overwrite_duplicates=args.overwrite_duplicates)
+
     run_app(app, host=args.host, port=args.port)
