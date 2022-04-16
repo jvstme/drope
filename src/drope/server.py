@@ -66,6 +66,8 @@ async def post_index(request: web.Request):
 
         if not request.app["overwrite_duplicates"]:
             filename = await unique_filename(filename)
+        elif await aiofiles.os.path.exists(filename):
+            await aiofiles.os.remove(filename)
         
         await aiofiles.os.rename(part_filename, filename)
             
