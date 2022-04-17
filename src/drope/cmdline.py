@@ -10,11 +10,13 @@ parser = ArgumentParser(
     description="Run a service to receive file uploads",
 )
 parser.add_argument(
+    "-H",
     "--host",
     default="127.0.0.1",
     help="bind socket to this host (default: %(default)s)",
 )
 parser.add_argument(
+    "-P",
     "--port",
     type=int,
     default=8000,
