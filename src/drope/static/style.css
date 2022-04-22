@@ -27,6 +27,7 @@ body {
     justify-content: center;
     text-align: center;
     padding: 1rem;
+    user-select: none;
 }
 
 #drop-area {
@@ -34,7 +35,6 @@ body {
     margin: 2rem;
     padding: 2rem;
     border: 4px dashed var(--main-color);
-    user-select: none;
 }
 
 #drop-area.drag-active {

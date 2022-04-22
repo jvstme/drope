@@ -16,10 +16,11 @@ let activeArea = dropArea;
 fileInputField.addEventListener("change", fileChosen, false);
 dropArea.addEventListener("dragenter", dragEntered, false);
 dropArea.addEventListener("dragleave", dragLeft, false);
-dropArea.addEventListener("dragover", dragOver, false);
+dropArea.addEventListener("dragover", ignoreEvent, false);
 dropArea.addEventListener("drop", itemDropped, false);
 body.addEventListener("dragover", ignoreEvent, false);
 body.addEventListener("drop", ignoreEvent, false);
+messageArea.addEventListener("dragover", dragOverMessageArea, false);
 messageCloseButton.addEventListener("click", messageCloseButtonClicked, false);
 
 
@@ -147,10 +148,6 @@ function dragLeft(e) {
     }
 }
 
-function dragOver(e) {
-    e.preventDefault();
-}
-
 function itemDropped(e) {
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -162,4 +159,8 @@ function itemDropped(e) {
         fileInputField.files = getFiles(e.dataTransfer);
         fileChosen();
     }
+}
+
+function dragOverMessageArea() {
+    activateArea(dropArea);
 }
