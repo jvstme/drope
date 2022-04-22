@@ -1,3 +1,4 @@
+const body = document.querySelector("body");
 const dropArea = document.getElementById("drop-area");
 const fileInputField = document.getElementById("file-input-field");
 const uploadForm = document.getElementById("upload-form");
@@ -12,12 +13,19 @@ const messageCloseButton = document.getElementById("message-close-button");
 let dragCounter = 0;
 let activeArea = dropArea;
 
-fileInputField.addEventListener("change", fileChosen);
+fileInputField.addEventListener("change", fileChosen, false);
 dropArea.addEventListener("dragenter", dragEntered, false);
 dropArea.addEventListener("dragleave", dragLeft, false);
 dropArea.addEventListener("dragover", dragOver, false);
 dropArea.addEventListener("drop", itemDropped, false);
-messageCloseButton.addEventListener("click", messageCloseButtonClicked);
+body.addEventListener("dragover", ignoreEvent, false);
+body.addEventListener("drop", ignoreEvent, false);
+messageCloseButton.addEventListener("click", messageCloseButtonClicked, false);
+
+
+function ignoreEvent(e) {
+    e.preventDefault();
+}
 
 
 function activateArea(area) {
@@ -51,8 +59,8 @@ function submitForm() {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", ".");
 
-    xhr.upload.addEventListener("progress", uploadProgressed);
-    xhr.addEventListener("readystatechange", uploadReadyStateChanged);
+    xhr.upload.addEventListener("progress", uploadProgressed, false);
+    xhr.addEventListener("readystatechange", uploadReadyStateChanged, false);
 
     xhr.send(data);
 }

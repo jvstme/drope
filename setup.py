@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 setuptools.setup(
     name="drope",
-    version="0.1.0",
+    version="0.1.1",
     description="A utility for receiving file uploads",
     long_description=long_description,
     long_description_content_type="text/markdown",
