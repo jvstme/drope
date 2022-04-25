@@ -18,7 +18,11 @@ Once installed, drope can be run as follows:
 drope
 ```
 
-The command will start a lightweight web server and host a page for uploading files. By default, the page is only accessible on localhost. If you want to host it on all network interfaces, consider adding the `--host 0.0.0.0` option. See `drope --help` for the list of options.
+The command will start a lightweight web server and host a page for uploading files.
+
+![Upload page screenshot](docs/example.png)
+
+By default, the page is only accessible on localhost. If you want to host it on all network interfaces, consider adding the `--host 0.0.0.0` option. See `drope --help` for the list of options.
 
 ## Contributing
 
