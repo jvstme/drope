@@ -1,17 +1,13 @@
 const body = document.querySelector("body");
 const dropArea = document.getElementById("drop-area");
+const filesArea = document.getElementById("files-area");
+const filesList = document.getElementById("files-list");
 const fileInputField = document.getElementById("file-input-field");
-const uploadForm = document.getElementById("upload-form");
-const loadingArea = document.getElementById("loading-area");
-const messageArea = document.getElementById("message-area");
-const uploadProgressIndicator = document.getElementById(
-    "upload-progress-indicator",
-);
-const messageText = document.getElementById("message-text");
-const messageCloseButton = document.getElementById("message-close-button");
+const fileChoiceForm = document.getElementById("file-choice-form");
+const templates = document.getElementById("templates");
+const fileContainerTemplate = templates.querySelector(".file-container");
 
 let dragCounter = 0;
-let activeArea = dropArea;
 
 fileInputField.addEventListener("change", fileChosen, false);
 dropArea.addEventListener("dragenter", dragEntered, false);
@@ -20,81 +16,75 @@ dropArea.addEventListener("dragover", ignoreEvent, false);
 dropArea.addEventListener("drop", itemDropped, false);
 body.addEventListener("dragover", ignoreEvent, false);
 body.addEventListener("drop", ignoreEvent, false);
-messageArea.addEventListener("dragover", dragOverMessageArea, false);
-messageCloseButton.addEventListener("click", messageCloseButtonClicked, false);
-
 
 function ignoreEvent(e) {
     e.preventDefault();
 }
 
-
-function activateArea(area) {
-    activeArea.classList.add("nodisplay");
-    activeArea = area;
-    activeArea.classList.remove("nodisplay");
-}
-
-function displayMessage(text) {
-    messageText.textContent = text;
-    activateArea(messageArea);
-}
-
-function setUploadProgress(value) {
-    uploadProgressIndicator.textContent = Number(value).toFixed(1);
-}
-
-function messageCloseButtonClicked() {
-    activateArea(dropArea);
-}
-
-
 function fileChosen() {
-    setUploadProgress(0);
-    activateArea(loadingArea);
-    submitForm();
+    doFilesUpload(fileInputField.files);
 }
 
-function submitForm() {
-    const data = new FormData(uploadForm);
+function doFilesUpload(files) {
+    for (let i = 0; i < files.length; i++) {
+        doFileUpload(files[i]);
+    }
+}
+
+function doFileUpload(file) {
+    const container = fileContainerTemplate.cloneNode(true);
+    container.querySelector(".file-name").innerText = file.name;
+    filesList.insertBefore(container, filesList.firstChild);
+    filesArea.classList.remove("nodisplay");
+    
+    const statusIndicator = container.querySelector(".status-indicator");
+    const progressValueNode = container.querySelector(".progress-value");
+
+    uploadFile(
+        file,
+        function(e) { uploadProgressed(e, progressValueNode); },
+        function(e) { uploadReadyStateChanged(e, statusIndicator); },
+    );
+}
+
+function uploadFile(file, progressListener, readyStateChangeListener) {
+    const data = new FormData();
+    data.append("file", file);
+
     const xhr = new XMLHttpRequest();
     xhr.open("POST", ".");
 
-    xhr.upload.addEventListener("progress", uploadProgressed, false);
-    xhr.addEventListener("readystatechange", uploadReadyStateChanged, false);
+    xhr.upload.addEventListener("progress", progressListener, false);
+    xhr.addEventListener("readystatechange", readyStateChangeListener, false);
 
     xhr.send(data);
 }
 
-function uploadReadyStateChanged(e) {
-    const xhr = e.target;
+function uploadReadyStateChanged(evt, statusIndicator) {
+    const xhr = evt.target;
 
     if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === 200) {
-            uploadSuccessful();
+            uploadSuccessFul(statusIndicator);
         } else {
-            uploadFailed();
+            uploadFailed(statusIndicator);
         }
     }
 }
 
-function filesNumberDescription() {
-    const n = fileInputField.files.length;
-    const noun = n === 1 ? "file" : "files";
-    return n + " " + noun;
+function uploadSuccessFul(indicator) {
+    indicator.querySelector(".progress-indicator").classList.add("nodisplay");
+    indicator.querySelector(".success-indicator").classList.remove("nodisplay");
 }
 
-function uploadSuccessful() {
-    displayMessage("Uploaded " + filesNumberDescription() + " :)");
+function uploadFailed(indicator) {
+    indicator.querySelector(".progress-indicator").classList.add("nodisplay");
+    indicator.querySelector(".error-indicator").classList.remove("nodisplay");
 }
 
-function uploadFailed() {
-    displayMessage("Upload failed :(");
-}
-
-function uploadProgressed(e) {
-    const progress = e.loaded / e.total * 100;
-    setUploadProgress(progress);
+function uploadProgressed(evt, progressValueNode) {
+    const progress = evt.loaded / evt.total * 100;
+    progressValueNode.textContent = progress.toFixed(1);
 }
 
 function updateDropAreaStatus() {
@@ -105,62 +95,42 @@ function updateDropAreaStatus() {
     }
 }
 
-function isFile(dtItem) {
-    return dtItem.kind === "file" && dtItem.type;
-}
-
-function getFiles(dt) {
-    const filteredDt = new DataTransfer();
-
-    for (let i = 0; i < dt.items.length; i++) {
-        if (isFile(dt.items[i])) {
-            const file = dt.items[i].getAsFile();
-            if (file !== null) {
-                filteredDt.items.add(file);
-            }
+function handleDtItem(dtItem) {
+    if (dtItem.webkitGetAsEntry !== undefined) {
+        const entry = dtItem.webkitGetAsEntry();
+        if (entry && entry.isFile) {
+            entry.file(doFileUpload);
+        }
+    } else if (dtItem.kind === "file") {
+        const file = dtItem.getAsFile();
+        if (file !== null) {
+            doFileUpload(file);
         }
     }
-
-    return filteredDt.files;
 }
 
-function hasFiles(dt) {
+function handleDt(dt) {
     for (let i = 0; i < dt.items.length; i++) {
-        if (isFile(dt.items[i])) {
-            return true;
-        }
+        handleDtItem(dt.items[i]);
     }
-
-    return false;
 }
 
 function dragEntered(e) {
-    if (hasFiles(e.dataTransfer)) {
-        dragCounter++;
-        updateDropAreaStatus();
-    }
+    dragCounter++;
+    updateDropAreaStatus();
 }
 
 function dragLeft(e) {
-    if (hasFiles(e.dataTransfer)) {
-        dragCounter--;
-        updateDropAreaStatus();
-    }
+    dragCounter--;
+    updateDropAreaStatus();
 }
 
 function itemDropped(e) {
     e.preventDefault();
     e.stopImmediatePropagation();
     
-    if (hasFiles(e.dataTransfer)) {
-        dragCounter = 0;
-        updateDropAreaStatus();
+    dragCounter = 0;
+    updateDropAreaStatus();
 
-        fileInputField.files = getFiles(e.dataTransfer);
-        fileChosen();
-    }
-}
-
-function dragOverMessageArea() {
-    activateArea(dropArea);
+    handleDt(e.dataTransfer);
 }
