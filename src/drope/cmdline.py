@@ -1,10 +1,10 @@
 import logging
+import os
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
 from . import server
-
 
 parser = ArgumentParser(
     description="Run a service to receive file uploads",
@@ -47,14 +47,21 @@ def setup_logging():
     server.logger.addHandler(handler)
 
 
+def create_and_change_dir(dir_name):
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+    server.logger.info("Files will be saved in %s", os.path.join(os.path.abspath(dir_name), ''))
+
+    os.chdir(dir_name)
+
+
 def main():
-    import os
     from aiohttp.web import run_app
 
     setup_logging()
 
     args = parser.parse_args()
-    os.chdir(args.dir)
+    create_and_change_dir(args.dir)
     app = server.make_app(overwrite_duplicates=args.overwrite_duplicates)
 
     run_app(app, host=args.host, port=args.port)
