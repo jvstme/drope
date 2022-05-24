@@ -1,9 +1,14 @@
 import os
+import random
+import string
 from io import BytesIO
 
 import aiohttp
 import pytest
 from drope import server
+from drope.cmdline import create_and_change_dir
+
+CURRENT_PATH = os.path.abspath('..')
 
 
 @pytest.fixture
@@ -11,6 +16,11 @@ async def client(aiohttp_client):
     app = server.make_app()
     client = await aiohttp_client(app)
     return client
+
+
+@pytest.fixture
+def random_path():
+    return os.path.join(CURRENT_PATH, ''.join(random.choice(string.ascii_lowercase) for _ in range(10)))
 
 
 async def test_unique_filename(tmpdir):
@@ -33,7 +43,7 @@ async def test_upload_with_duplicates(client, tmpdir):
 
     form1 = aiohttp.FormData()
     form1.add_field("file", BytesIO(b"12345"), filename="12345.txt")
-    
+
     resp1 = await client.post("/", data=form1)
     assert resp1.status == 200
 
@@ -58,7 +68,7 @@ async def test_upload_overwrite_duplicates(aiohttp_client, tmpdir):
 
     form1 = aiohttp.FormData()
     form1.add_field("file", BytesIO(b"123"), filename="123.txt")
-    
+
     resp1 = await client.post("/", data=form1)
     assert resp1.status == 200
 
@@ -104,3 +114,20 @@ async def test_index(client):
 async def test_not_found(client):
     resp = await client.get("/nonexistent")
     assert resp.status == 404
+
+
+def test_create_dir(random_path):
+    assert os.path.exists(random_path) is False
+    create_and_change_dir(random_path)
+    assert os.getcwd() == random_path
+    os.rmdir(random_path)
+    os.chdir(CURRENT_PATH)
+
+
+def test_existing_dir(random_path):
+    os.makedirs(random_path)
+    assert os.path.exists(random_path) is True
+    create_and_change_dir(random_path)
+    assert os.getcwd() == random_path
+    os.rmdir(random_path)
+    os.chdir(CURRENT_PATH)
