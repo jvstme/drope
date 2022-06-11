@@ -50,8 +50,6 @@ def setup_logging():
 def create_and_change_dir(dir_name):
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
-    server.logger.info("Files will be saved in %s", os.path.join(os.path.abspath(dir_name), ''))
-
     os.chdir(dir_name)
 
 
