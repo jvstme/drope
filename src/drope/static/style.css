@@ -60,6 +60,7 @@ main {
     font-size: 1rem;
     color: black;
     padding: 0;
+    gap: 1rem;
 
     display: flex;
     flex-direction: column;
@@ -69,7 +70,14 @@ main {
 
 .file-container {
     border: 1px solid var(--main-color);
-    background-color: rgb(250, 250, 250);
+
+    --progress: 0%;
+    background: linear-gradient(
+        to right,
+        rgb(217, 217, 217) var(--progress),
+        rgb(250, 250, 250) var(--progress)
+    );
+
     margin: 0.2em;
     padding: 0.4em;
     text-align: left;
@@ -84,7 +92,7 @@ main {
     margin-right: 1rem;
 }
 
-#files-area-title {
+.files-section-title {
     text-align: center;
     margin-top: 0;
 }

@@ -1,9 +1,11 @@
 const body = document.querySelector("body");
 const dropArea = document.getElementById("drop-area");
 const filesArea = document.getElementById("files-area");
-const filesList = document.getElementById("files-list");
+const activeUploadsSec = document.getElementById("active-uploads-section");
+const activeFilesList = document.getElementById("active-uploads-file-list");
+const finishedUploadsSec = document.getElementById("finished-uploads-section");
+const finishedFilesList = document.getElementById("finished-uploads-file-list");
 const fileInputField = document.getElementById("file-input-field");
-const fileChoiceForm = document.getElementById("file-choice-form");
 const templates = document.getElementById("templates");
 const fileContainerTemplate = templates.querySelector(".file-container");
 
@@ -34,16 +36,16 @@ function doFilesUpload(files) {
 function doFileUpload(file) {
     const container = fileContainerTemplate.cloneNode(true);
     container.querySelector(".file-name").innerText = file.name;
-    filesList.insertBefore(container, filesList.firstChild);
+    activeFilesList.insertBefore(container, activeFilesList.firstChild);
+    activeUploadsSec.classList.remove("nodisplay");
     filesArea.classList.remove("nodisplay");
     
-    const statusIndicator = container.querySelector(".status-indicator");
     const progressValueNode = container.querySelector(".progress-value");
 
     uploadFile(
         file,
-        function(e) { uploadProgressed(e, progressValueNode); },
-        function(e) { uploadReadyStateChanged(e, statusIndicator); },
+        function(e) { uploadProgressed(e, container, progressValueNode); },
+        function(e) { uploadReadyStateChanged(e, container); },
     );
 }
 
@@ -60,31 +62,49 @@ function uploadFile(file, progressListener, readyStateChangeListener) {
     xhr.send(data);
 }
 
-function uploadReadyStateChanged(evt, statusIndicator) {
+function uploadProgressed(evt, fileContainer, progressValueNode) {
+    const progress = evt.loaded / evt.total * 100;
+    setProgressBar(fileContainer, progress);
+    progressValueNode.textContent = progress.toFixed(1);
+}
+
+function uploadReadyStateChanged(evt, fileContainer) {
     const xhr = evt.target;
 
     if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === 200) {
-            uploadSuccessFul(statusIndicator);
+            uploadSuccessful(fileContainer);
         } else {
-            uploadFailed(statusIndicator);
+            uploadFailed(fileContainer);
         }
     }
 }
 
-function uploadSuccessFul(indicator) {
-    indicator.querySelector(".progress-indicator").classList.add("nodisplay");
-    indicator.querySelector(".success-indicator").classList.remove("nodisplay");
+function uploadSuccessful(fileCont) {
+    fileCont.querySelector(".progress-indicator").classList.add("nodisplay");
+    fileCont.querySelector(".success-indicator").classList.remove("nodisplay");
+    moveToFinished(fileCont);
 }
 
-function uploadFailed(indicator) {
-    indicator.querySelector(".progress-indicator").classList.add("nodisplay");
-    indicator.querySelector(".error-indicator").classList.remove("nodisplay");
+function uploadFailed(fileCont) {
+    fileCont.querySelector(".progress-indicator").classList.add("nodisplay");
+    fileCont.querySelector(".error-indicator").classList.remove("nodisplay");
+    moveToFinished(fileCont);
 }
 
-function uploadProgressed(evt, progressValueNode) {
-    const progress = evt.loaded / evt.total * 100;
-    progressValueNode.textContent = progress.toFixed(1);
+function moveToFinished(fileContainer) {
+    fileContainer.parentElement.removeChild(fileContainer);
+    setProgressBar(fileContainer, 0);
+    finishedFilesList.insertBefore(fileContainer, finishedFilesList.firstChild);
+    finishedUploadsSec.classList.remove("nodisplay");
+
+    if (activeFilesList.children.length === 0) {
+        activeUploadsSec.classList.add("nodisplay");
+    }
+}
+
+function setProgressBar(element, progress) {
+    element.style.setProperty("--progress", progress + "%");
 }
 
 function updateDropAreaStatus() {
